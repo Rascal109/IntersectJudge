@@ -1,0 +1,14 @@
+# bin directory
+/bin/
+/**/bin/
+
+# obj directory
+/obj/
+/**/obj/
+
+# TestResults directory
+/TestResults/
+/**/TestResults/
+
+# .vs (Visual Studio hidden folder)
+.vs/
