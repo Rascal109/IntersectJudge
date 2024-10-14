@@ -17,6 +17,7 @@
 #include <maya/MColor.h>
 #include <maya/MObjectHandle.h>
 #include <maya/MDGMessage.h>
+#include <maya/MNodeMessage.h>
 #include <memory>
 
 // 外積計算.
@@ -343,15 +344,23 @@ public:
 	static void registerCallback();
 	static void deregisterCallback();
 
+	static void registerCallbackDirty();
+	static void deregisterCallbackDirty();
+
 	static void callbackFunc(void* hoge);
+	static void callbackFuncDirty(MObject& component, void* hoge);
 
 private:
 	static MCallbackId callbackId;
+	static MCallbackId callbackId2;
 	static bool activeFlag;
+	static int count;
 };
 
 MCallbackId IntersectJudge::callbackId = 0;
+MCallbackId IntersectJudge::callbackId2 = 0;
 bool IntersectJudge::activeFlag = false;
+int IntersectJudge::count = 0;
 
 void* IntersectJudge::creator() {
 	return new IntersectJudge();
@@ -364,7 +373,7 @@ void IntersectJudge::registerCallback() {
 		activeFlag = true;
 	}
 	else {
-		MGlobal::displayInfo("エラー: コールバック関数の登録に失敗しました.");
+		MGlobal::displayError("コールバック関数の登録に失敗しました.");
 	}
 
 	return;
@@ -378,7 +387,7 @@ void IntersectJudge::deregisterCallback() {
 		activeFlag = false;
 	}
 	else {
-		MGlobal::displayError("エラー: コールバック関数の解除に失敗しました");
+		MGlobal::displayError("コールバック関数の解除に失敗しました");
 	}
 
 	return;
@@ -437,8 +446,123 @@ void IntersectJudge::callbackFunc(void* hoge) {
 				polyIter.getPoints(vertices);
 
 				calcIntersectPoly(mesh, *BVHtree, vertices, intersectPoly); // 交差したポリゴンの検索.
-
 				setPolyColor(mesh, dagPath, component, intersectPoly); // そのポリゴンの色を変える.
+			}
+		}
+	}
+}
+
+
+
+
+void IntersectJudge::registerCallbackDirty() {
+	MSelectionList selection;
+	MGlobal::getActiveSelectionList(selection);
+
+	if ((int)(selection.length()) == 0) {
+		MGlobal::displayError("オブジェクトが選択されていません.");
+		return;
+	}
+
+	MObject node;
+	MDagPath dagPath;
+	selection.getDagPath(0, dagPath, node);
+
+	if (node.isNull()) {
+		MGlobal::displayError("有効なオブジェクトがありません.");
+		return;
+	}
+
+	if (callbackId2 == 0) {
+		MStatus status;
+		node = dagPath.node();
+		callbackId2 = MNodeMessage::addNodeDirtyCallback(node, callbackFuncDirty, nullptr, &status);
+		MGlobal::displayInfo("コールバック関数が登録されました.");
+		activeFlag = true;
+	}
+	else {
+		MGlobal::displayError("コールバック関数の登録に失敗しました.");
+	}
+	return;
+}
+
+void IntersectJudge::deregisterCallbackDirty() {
+	MMessage::removeCallback(callbackId2);
+	callbackId2 = 0;
+	MGlobal::displayInfo("コールバック関数が解除されました.");
+	activeFlag = false;
+	return;
+}
+
+void IntersectJudge::callbackFuncDirty(MObject& object, void* hoge) {
+	if (!activeFlag) {
+		return;
+	}
+
+	if (count != 20) {
+		++count;
+	}
+	else {
+		MGlobal::displayInfo("関数が動作します.");
+		count = 0;
+		resetPolyColor();
+
+		MSelectionList selection;
+		MGlobal::getActiveSelectionList(selection);
+		MItSelectionList selectIter(selection);
+
+		bool colorSetFlag = false;
+
+		std::vector<int> polyList;
+		std::unique_ptr<BVHnode> BVHtree;
+		std::vector<int> intersectPoly;
+
+
+		//現在は一物体に対するコード.
+		for (; !selectIter.isDone(); selectIter.next()) {
+			MDagPath dagPath;
+			MObject component; // 選択範囲の要素.
+			selectIter.getDagPath(dagPath, component);
+			//allComponent = dagPath.node();
+			MFnMesh mesh(component);
+
+			if (!dagPath.hasFn(MFn::kMesh) || !component.hasFn(MFn::kMeshPolygonComponent)) {
+				MGlobal::displayInfo("面がないです.");
+				continue;
+			}
+
+			else {
+				polyList.clear();
+				//MGlobal::displayInfo("PolyIterの作成をします.");
+				MItMeshPolygon polyIter(dagPath, component);
+				//MGlobal::displayInfo("PolyIterの作成を完了.");
+
+				for (; !polyIter.isDone(); polyIter.next()) {
+					int polyIndex = polyIter.index();
+					polyList.push_back(polyIndex);
+				}
+				if ((int)(polyList.size()) == 1) {
+					continue;
+				}
+
+				//MGlobal::displayInfo("BVHtreeの作成.");
+				BVHtree = std::move(makeBVHtree(polyList, mesh)); // BVHツリー作成.
+				MGlobal::displayInfo("BVHtreeの作成が完了.");
+
+				polyIter.reset();
+
+				//MItMeshPolygon selectPolyIter(dagPath, allComponent);
+
+				for (; !polyIter.isDone(); polyIter.next()) {
+					intersectPoly.clear();
+
+					MPointArray vertices;
+					polyIter.getPoints(vertices);
+
+					calcIntersectPoly(mesh, *BVHtree, vertices, intersectPoly); // 交差したポリゴンの検索.
+					MGlobal::displayInfo("色塗り.");
+					setPolyColor(mesh, dagPath, component, intersectPoly); // そのポリゴンの色を変える.
+				}
 			}
 		}
 	}
@@ -452,7 +576,7 @@ MStatus initializePlugin(MObject obj) {
 		MGlobal::displayInfo("Intersectコマンドを追加しました.");
 	}
 
-	IntersectJudge::registerCallback();
+	IntersectJudge::registerCallbackDirty();
 
 	return MS::kSuccess;
 }
@@ -462,7 +586,7 @@ MStatus uninitializePlugin(MObject obj) {
 
 	// プラグインの選択を解除.
 
-	IntersectJudge::deregisterCallback();
+	IntersectJudge::deregisterCallbackDirty();
 
 	resetPolyColor();
 
