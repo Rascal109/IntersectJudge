@@ -74,22 +74,7 @@ std::unique_ptr<BVHnode> makeBVHtree(std::vector<int>& polyList, const MFnMesh& 
 	std::unique_ptr<BVHnode> node = std::make_unique<BVHnode>();
 
 	// É|ÉäÉSÉìÉäÉXÉgÇÃÉ|ÉäÉSÉìÇÇ∑Ç◊Çƒä‹ÇﬁAABBÇçÏê¨.
-	for (int poly : polyList) {
-		MItMeshPolygon polyIter(mesh.object());
-		int polyIndex = -1;
-
-		for (; !polyIter.isDone(); polyIter.next()) {
-			if (polyIter.index() == poly) {
-				polyIndex = polyIter.index();
-				break;
-			}
-		}
-
-		if (polyIndex == -1) {
-			MGlobal::displayError("É|ÉäÉSÉìÇ™å©Ç¬ÇØÇÁÇÍÇ‹ÇπÇÒ.");
-			return nullptr;
-		}
-
+	for (int polyIndex : polyList) {
 		MBoundingBox aabb = calcPolyAABB(mesh, polyIndex);
 		// ÇªÇÃnodeÇÃAABBÇ™ãÛÇÃèÍçá, ÇªÇÍÇAABBÇ…ê›íË.
 		if (node->aabb.width() == 0 &&
@@ -105,25 +90,7 @@ std::unique_ptr<BVHnode> makeBVHtree(std::vector<int>& polyList, const MFnMesh& 
 	if ((int)(polyList.size()) > 1) {
 		int axis = depth % 3; // 0: x, 1: y, 2: z.
 
-		std::sort(polyList.begin(), polyList.end(), [&mesh, axis](int& polyA, int& polyB) {
-
-			MItMeshPolygon polyIter(mesh.object());
-			int polyAIndex = -1;
-			int polyBIndex = -1;
-
-			for (; !polyIter.isDone(); polyIter.next()) {
-				if (polyIter.index() == polyA) {
-					polyAIndex = polyIter.index();
-				}
-				else if (polyIter.index() == polyB) {
-					polyBIndex = polyIter.index();
-				}
-
-				if (polyAIndex != -1 && polyBIndex != -1) {
-					break;
-				}
-			}
-
+		std::sort(polyList.begin(), polyList.end(), [&mesh, axis](int& polyAIndex, int& polyBIndex) {
 			MBoundingBox boxA = calcPolyAABB(mesh, polyAIndex);
 			MBoundingBox boxB = calcPolyAABB(mesh, polyBIndex);
 
@@ -260,7 +227,7 @@ void calcIntersectPoly(const MFnMesh& mesh, const BVHnode& node, const MPointArr
 	}
 
 	bool flag = node.aabb.intersects(baseAABB);
-	// AABBÇÃåç∑îªíË.
+
 	if (!flag) {
 		return;
 	}
