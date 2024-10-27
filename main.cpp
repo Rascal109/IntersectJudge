@@ -167,6 +167,7 @@ bool intersectJudge(const MPointArray& vertices1, const MPointArray& vertices2) 
 
 	bool flag1 = false; // ˆê•û‚Ì–Ê‚É‘Î‚µ‚Ä, Œðü‚ª–Êã(•Óãœ‚­)‚É‚ ‚é‚È‚çfalse.
 	bool flag2 = false;
+
 	if ((int)(vertices1.length()) == 3) {
 		MVector v1 = cross((p - vertices1[0]), dirVec);
 		MVector v2 = cross((p - vertices1[1]), dirVec);
@@ -175,20 +176,6 @@ bool intersectJudge(const MPointArray& vertices1, const MPointArray& vertices2) 
 		flag1 = ((dot(v1, v2) > 0 && dot(v1, v3) > 0 && dot(v2, v3) > 0)
 			|| (dot(v1, v2) < 0 && dot(v1, v3) < 0 && dot(v2, v3) < 0)) ||
 			dot(v1, v2) * dot(v1, v3) * dot(v2, v3) == 0;
-
-		v1 = cross((p - vertices2[0]), dirVec);
-		v2 = cross((p - vertices2[1]), dirVec);
-		v3 = cross((p - vertices2[2]), dirVec);
-
-		flag2 = ((dot(v1, v2) > 0 && dot(v1, v3) > 0 && dot(v2, v3) > 0)
-			|| (dot(v1, v2) < 0 && dot(v1, v3) < 0 && dot(v2, v3) < 0));
-
-		if (!flag1 && !flag2) {
-			return true;
-		}
-		else {
-			return false;
-		}
 	}
 	else {
 		MVector v1 = cross((p - vertices1[0]), dirVec);
@@ -199,23 +186,34 @@ bool intersectJudge(const MPointArray& vertices1, const MPointArray& vertices2) 
 		flag1 = ((dot(v1, v2) > 0 && dot(v1, v3) > 0 && dot(v1, v4) > 0 && dot(v2, v3) > 0)
 			|| (dot(v1, v2) < 0 && dot(v1, v3) < 0 && dot(v1, v4) < 0 && dot(v2, v3) < 0) ||
 			dot(v1, v2) * dot(v1, v3) * dot(v1, v4) * dot(v2, v3) == 0);
+	}
 
-		v1 = cross((p - vertices2[0]), dirVec);
-		v2 = cross((p - vertices2[1]), dirVec);
-		v3 = cross((p - vertices2[2]), dirVec);
-		v4 = cross((p - vertices2[3]), dirVec);
+	if ((int)(vertices2.length()) == 3) {
+		MVector v1 = cross((p - vertices2[0]), dirVec);
+		MVector v2 = cross((p - vertices2[1]), dirVec);
+		MVector v3 = cross((p - vertices2[2]), dirVec);
+
+		flag2 = ((dot(v1, v2) > 0 && dot(v1, v3) > 0 && dot(v2, v3) > 0)
+			|| (dot(v1, v2) < 0 && dot(v1, v3) < 0 && dot(v2, v3) < 0)) ||
+			dot(v1, v2) * dot(v1, v3) * dot(v2, v3) == 0;
+	}
+	else {
+		MVector v1 = cross((p - vertices2[0]), dirVec);
+		MVector v2 = cross((p - vertices2[1]), dirVec);
+		MVector v3 = cross((p - vertices2[2]), dirVec);
+		MVector v4 = cross((p - vertices2[3]), dirVec);
 
 		flag2 = ((dot(v1, v2) > 0 && dot(v1, v3) > 0 && dot(v1, v4) > 0 && dot(v2, v3) > 0)
 			|| (dot(v1, v2) < 0 && dot(v1, v3) < 0 && dot(v1, v4) < 0 && dot(v2, v3) < 0) ||
 			dot(v1, v2) * dot(v1, v3) * dot(v1, v4) * dot(v2, v3) == 0);
+	}
 
-		// 2‚Â‚Ì–Ê‚É‘Î‚µ‚Ä, ‚Ç‚¿‚ç‚àŒðü‚ª–Êã(•Óãœ‚­)‚É‚È‚¢‚Æ‚«true.
-		if (!flag1 && !flag2) {
-			return true;
-		}
-		else {
-			return false;
-		}
+	// 2‚Â‚Ì–Ê‚É‘Î‚µ‚Ä, ‚Ç‚¿‚ç‚àŒðü‚ª–Êã(•Óãœ‚­)‚É‚È‚¢‚Æ‚«true.
+	if (!flag1 && !flag2) {
+		return true;
+	}
+	else {
+		return false;
 	}
 }
 
