@@ -3,8 +3,8 @@
 Mayaのプラグイン開発の練習として作ってみたものである。コードは`main.cpp`にある。
 ## 用途と原理
 <p align = "center">
-  <img src = "https://github.com/user-attachments/assets/78f93fde-5b5c-4306-80b1-0eeee0e67e49"　alt="Image 1" height="300"> 
-  <img src = "https://github.com/user-attachments/assets/a9fcc20a-ed3a-4476-b10f-e632575c0c8c"　alt="Image 2" height="300"/>
+  <img src = "https://github.com/user-attachments/assets/32886cec-45b5-4516-9c4a-2a3426b7cec2"　alt="Image 1" height="300"> 
+  <img src = "https://github.com/user-attachments/assets/a48a280d-9906-406a-885d-a53d6a7fdabe"　alt="Image 2" height="300"/>
 </p>
    
 * Maya上において, ある一つのオブジェクトに対して面の範囲を選択した際に、その範囲内で物体が交差しているかどうかを判定するプラグイン。
