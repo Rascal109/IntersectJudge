@@ -261,10 +261,10 @@ void setPolyColor(MFnMesh& mesh, MDagPath& dagPath, MObject& component, std::vec
 
 	if ((int)(colorNames.length()) == 0) {
 		mesh.createColorSet(colorSetName);
-		mesh.setCurrentColorSetName(colorSetName);
 		MGlobal::displayInfo("カラーセットを作成しました.");
 	}
 
+	mesh.setCurrentColorSetName(colorSetName);
 	MColor color(1.0f, 0.0f, 0.0f); // 赤色.
 
 	// メッシュにおける各ポリゴンに対して色を塗る.
